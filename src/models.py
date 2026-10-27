@@ -35,7 +35,7 @@ def load_models(args,out=None):
         sm=info['sentiment']; em=info['embedding']
         print('Loading sentiment weights through verified HTTPS', flush=True)
         tok=AutoTokenizer.from_pretrained(sm['id'],revision=sm['revision'],use_fast=False)
-        classifier=AutoModelForSequenceClassification.from_pretrained(sm['id'],revision=sm['revision']).to('cpu').eval()
+        classifier=AutoModelForSequenceClassification.from_pretrained(sm['id'],revision=sm['revision'],use_safetensors=False if sm['id']==SENTIMENT_MODEL else None).to('cpu').eval()
         print('Loading multilingual embedding weights', flush=True)
         embedder=SentenceTransformer(em['id'],revision=em['revision'],device='cpu')
     except Exception as e:
@@ -58,6 +58,8 @@ def load_models(args,out=None):
     info['sentiment']['score_definition']='P(positive) - P(negative)'
     info['sentiment']['preprocessing']='underthesea word segmentation; no stopword removal; truncation at model/tokenizer maximum'
     info['sentiment']['domain_note']='Fine-tuned on 30K e-commerce reviews (model card); domain differs from Facebook robot vacuum comments. No validated accuracy claimed.'
+    info['embedding']['max_seq_length']=embedder.max_seq_length
+    info['embedding']['dimension']=embedder.get_sentence_embedding_dimension()
     return tok,classifier,embedder,mapping,info
 
 def infer_sentiment(texts,tok,classifier,mapping,batch_size):
@@ -81,6 +83,7 @@ def cluster(texts,embedder,seed,batch_size):
     if n<6: raise ValueError('Fewer than six retained comments; insufficient for meaningful BERTopic clustering.')
     minimum=max(3,min(30,round(n**0.5/2)))
     params=dict(min_topic_size=minimum,min_cluster_size=minimum,n_neighbors=min(15,n-1),min_df=1 if n<100 else 2,n_components=min(5,n-2))
+    params['embedding_truncated_count']=sum(len(embedder.tokenizer.encode(t,add_special_tokens=True))>embedder.max_seq_length for t in texts)
     embeddings=embedder.encode(texts,batch_size=batch_size,show_progress_bar=True,normalize_embeddings=True,convert_to_numpy=True)
     model=BERTopic(embedding_model=embedder,language='multilingual',min_topic_size=minimum,
         umap_model=UMAP(n_neighbors=params['n_neighbors'],n_components=params['n_components'],min_dist=0.0,metric='cosine',random_state=seed,n_jobs=1),

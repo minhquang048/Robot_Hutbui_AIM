@@ -47,7 +47,7 @@ def test_aggregation_includes_outliers_and_sensitivity_denominators():
     summary,cross=topic_tables(df,TopicModel())
     assert summary['count'].sum()==cross['count'].sum()==3
     assert -1 in summary.topic_id.tolist()
-    assert summary.loc[summary.topic_id==0,'topic_name_vi'].iloc[0]=='Pin và sạc'
+    assert summary.loc[summary.topic_id==0,'topic_name_vi'].iloc[0]=='Pin và chế độ vận hành'
     assert sentiment_dist(df)['count'].sum()==3
     sens=sensitivity(df)
     assert set(sens[sens.scope=='organic_only'].denominator)=={2}
@@ -84,3 +84,37 @@ def test_artifact_validation_rejects_inconsistent_results(tmp_path):
     assert validate(tmp_path,3)['status']=='passed'
     cross.loc[0,'count']+=1; csv(cross,tmp_path/'topic_sentiment_crosstab.csv')
     with pytest.raises(AssertionError): validate(tmp_path,3)
+
+def test_inventory_ads_require_multiple_signals_and_negated_fault_is_not_pain():
+    from preprocess import has_issue
+    assert commercial('Em sẵn hàng giá tốt, ship toàn quốc')[0]=='commercial'
+    assert commercial('HCM em có Dreame D20 Ultra k lỗi. giá 5X. Xem máy tại HCM Ship COD toàn quốc')[0]=='commercial'
+    assert commercial('Sẵn hàng giao lắp tại nhà')[0]=='commercial'
+    assert commercial('Lỗi quạt hút rồi, bên e nhận sửa, hotline 0912345678')[0]=='mixed_commercial'
+    assert commercial('Máy mình mua giá 10tr, pin yếu')[0]=='organic'
+    assert not has_issue('Chưa gặp lỗi lầm gì, không hỏng, k lỗi, ít lỗi vặt')
+    assert has_issue('Máy không hút sạch, pin yếu')
+    assert has_issue('Lỗi cảm biến rồi')
+    assert 'Số 3' not in mask('Lỗi main. Số 3, ngách 20, Ngõ 91, Hà Nội')
+
+def test_sales_warranty_promises_do_not_become_real_issue_content():
+    assert commercial('Bên em đang xả kho giá tốt, miễn ship, gặp lỗi gì cũng hỗ trợ, lỗi lớn cũng có vận chuyển về hãng')[0]=='commercial'
+    assert commercial('HCM nhận sửa hết lỗi')[0]=='commercial'
+    assert commercial('Giá tốt')[0]=='organic'
+    assert commercial('Giá Roborock rẻ hơn trước')[0]=='organic'
+    assert commercial('Có giá cực tốt nha, freeship toàn quốc')[0]=='commercial'
+
+def test_resale_affiliate_links_and_generic_warranty_ads():
+    assert commercial('Mình cần pass con E5 còn đẹp giá 2tr')[0]=='commercial'
+    assert commercial('Giá siêu tốt roborock [URL]')[0]=='commercial'
+    assert commercial('Bên em máy nguyên seal giá 10tr hỗ trợ đổi mới bảo hành máy lỗi siêu nhanh, ib em')[0]=='commercial'
+    assert commercial('Lỗi cảm biến thực sự rồi, bên em nhận sửa')[0]=='mixed_commercial'
+
+def test_pain_rules_use_word_boundaries_not_substrings():
+    from reporting import pain_evidence
+    df=pd.DataFrame({'source_row_id':[2,3,4],'topic_id':[0,0,0],'text_for_topic':['ít thôi bên em','sạch ko bạn','Bê trạm lên tầng nặng quá'],'text_masked':['ít thôi bên em','sạch ko bạn','Bê trạm lên tầng nặng quá']})
+    evidence=pain_evidence(df)
+    assert evidence.candidate_comment_count.sum()==1
+    assert evidence.pain_point.tolist()==['Bê máy và trạm giữa các tầng']
+    empty=pain_evidence(df.iloc[:2])
+    assert empty.empty and 'candidate_comment_count' in empty.columns

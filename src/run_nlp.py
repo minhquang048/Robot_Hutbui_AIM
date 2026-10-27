@@ -84,7 +84,7 @@ def main(args):
     if args.min_chars<1 or args.batch_size<1: raise ValueError('min-chars and batch-size must be positive')
     if any(out.iterdir()):
         if not args.overwrite: raise FileExistsError('Output directory is not empty. Select a new directory or explicitly use --overwrite.')
-        known=set(REQUIRED+['sentiment_review_sample.csv','sensitivity_results.csv','business_evidence.csv','model_smoke_predictions.csv','sentiment_model_card.md','embedding_model_card.md','validation.json','failure.txt','.incomplete'])
+        known=set(REQUIRED+['sentiment_review_sample.csv','sensitivity_results.csv','business_evidence.csv','pain_point_evidence.csv','model_smoke_predictions.csv','sentiment_model_card.md','embedding_model_card.md','validation.json','failure.txt','.incomplete'])
         unknown={p.name for p in out.iterdir()}-known
         if unknown: raise FileExistsError('Refusing to remove unrelated output files: '+str(sorted(unknown)))
         for p in out.iterdir(): p.unlink()

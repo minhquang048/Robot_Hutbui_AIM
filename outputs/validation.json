@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "retained_count": 932,
+  "checks": [
+    "required artifacts",
+    "sum/denominator consistency",
+    "per-topic crosstab consistency",
+    "probability bounds and score formula",
+    "UTF-8 BOM CSV",
+    "masked exported contacts",
+    "PNG integrity and resolution"
+  ]
+}

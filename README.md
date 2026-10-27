@@ -39,6 +39,8 @@ Every original row has its Excel row number (`source_row_id`), normalized masked
 
 Commercial rules require multiple signals and distinguish `organic`, `commercial`, `mixed_commercial`, and `uncertain`. Brands, price, repair and warranty words alone do not classify a message as spam. Primary analysis keeps organic and issue-bearing mixed messages; separable sales-only sentences are removed from mixed model input when possible. The masked full comment remains available for audit. Ambiguous single-signal messages are flagged uncertain and excluded pending review. Rules are heuristics. Organic-only sensitivity reuses primary topic assignments and changes the denominator; it does not refit clusters.
 
+Rules include inventory/clearance, delivery/COD, resale and promotional-link combinations. Common negated-fault statements and generic seller warranty promises do not by themselves qualify as real issue content. Both labelled and recognizable unlabelled street addresses are masked. Residual promotion and missed/incorrect labels remain possible; `organic` is a rule output, not proof of customer identity.
+
 Topic -1 is retained as Other / Unassigned in every denominator. Topic names are proposed using keywords **and representative sentences**, marked as requiring human review. Membership strengths are not calibrated topic probabilities. Business evidence categories are explicit overlapping lexical mention counts, distinct from BERTopic assignments. Reports separate measured mentions from opportunity hypotheses; discussions do not establish purchase causality or unique-customer shares.
 
 ## Outputs and validation
@@ -46,6 +48,16 @@ Topic -1 is retained as Other / Unassigned in every denominator. Topic names are
 A successful run produces every artifact requested by `CODEX_INSTRUCTIONS_ROBOT_VACUUM_NLP.md`, plus `sentiment_review_sample.csv`, `sensitivity_results.csv`, `business_evidence.csv`, model cards, `model_smoke_predictions.csv`, and `validation.json`. CSVs are UTF-8 with BOM; PNGs are 180 dpi and use DejaVu Sans for Vietnamese.
 
 The runner verifies original-input SHA-256, counts including outliers, per-topic crosstab consistency, probability/score consistency, missing results, exported phone/email/handle masking, CSV encoding, and PNG integrity/resolution. It prints absolute output paths. A `.incomplete` marker, failure.txt, and metadata status `failed` indicate an incomplete run; partial audit files are **not** sentiment/topic findings. Stale results are removed only with explicit overwrite.
+
+`pain_point_evidence.csv` records eight explicit, overlapping rules for concrete issue/usage candidates, with matching expressions, Excel row IDs, counts, topics, masked examples and opportunity hypotheses. These are mention candidates, not verified incidents. The report separates these from broader feature co-occurrence counts in `business_evidence.csv`, model predictions, and business hypotheses. The largest topic contains short mixed dialogue and must not be interpreted as all purchase-intent comments.
+
+To refresh proposed topic names, charts and the report from an already completed verified model run without repeating inference:
+
+```bash
+python src/refresh_report.py --output outputs
+```
+
+This preserves sentiment probabilities, cluster assignments and counts. It records the report refresh timestamp separately from the original model runtime. Refreshing does not perform human validation.
 
 Run meaningful offline regression checks:
 

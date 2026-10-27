@@ -1,6 +1,6 @@
 {
-  "status": "failed",
-  "started_at_utc": "2026-10-27T11:11:41.646436+00:00",
+  "status": "completed_pending_human_review",
+  "started_at_utc": "2026-10-27T11:40:21.601512+00:00",
   "input_path": "/workspace/Robot_Hutbui_AIM/robothutbui_facebookscrape.xlsx",
   "input_sha256": "076a6e46e20f9d86c39a1624928e3f5f1c75e026925ef4431ac6db3904d59fc3",
   "sheet": "comments",
@@ -21,16 +21,35 @@
     "min_chars": 1,
     "batch_size": 16,
     "near_duplicate_removal": false,
-    "primary_scope": "organic + issue-bearing mixed_commercial; exclude uncertain, commercial, empty and exact normalized duplicates"
+    "primary_scope": "organic + issue-bearing mixed_commercial; exclude uncertain, commercial, empty and exact normalized duplicates",
+    "sentiment_max_length": 256,
+    "sentiment_truncated_count": 0,
+    "min_topic_size": 15,
+    "min_cluster_size": 15,
+    "n_neighbors": 15,
+    "min_df": 2,
+    "n_components": 5,
+    "embedding_truncated_count": 6,
+    "topic_probability_definition": "HDBSCAN membership strength, not calibrated posterior; outlier is topic -1"
   },
   "models": {
     "sentiment": {
       "id": "wonrax/phobert-base-vietnamese-sentiment",
-      "revision": "9076a5896971b5d551588fe8a51c722c89731d36"
+      "revision": "9076a5896971b5d551588fe8a51c722c89731d36",
+      "id2label": {
+        "0": "NEG",
+        "1": "POS",
+        "2": "NEU"
+      },
+      "score_definition": "P(positive) - P(negative)",
+      "preprocessing": "underthesea word segmentation; no stopword removal; truncation at model/tokenizer maximum",
+      "domain_note": "Fine-tuned on 30K e-commerce reviews (model card); domain differs from Facebook robot vacuum comments. No validated accuracy claimed."
     },
     "embedding": {
       "id": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-      "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+      "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+      "max_seq_length": 128,
+      "dimension": 384
     }
   },
   "versions": {
@@ -49,38 +68,34 @@
   },
   "stage_status": {
     "audit": "completed",
-    "models": "failed",
-    "sentiment": "unrun",
-    "topics": "unrun",
-    "report": "unrun",
-    "validation": "unrun"
+    "models": "completed",
+    "sentiment": "completed",
+    "topics": "completed",
+    "report": "completed_pending_human_review",
+    "validation": "passed"
   },
-  "retained_rows": 1114,
+  "retained_rows": 932,
   "exclusion_counts": {
-    "uncertain": 335,
-    "commercial": 188,
+    "commercial": 384,
+    "uncertain": 321,
     "exact_duplicate": 180,
     "empty": 7
   },
   "commercial_label_counts": {
-    "organic": 1169,
-    "uncertain": 411,
-    "commercial": 211,
-    "mixed_commercial": 33
+    "organic": 994,
+    "commercial": 424,
+    "uncertain": 392,
+    "mixed_commercial": 14
   },
   "exact_duplicate_flags": 180,
-  "runtime_seconds": 35.10247707499991,
-  "error_type": "RuntimeError",
-  "error": "Pretrained model download/load failed: proxy/access denied (403); hosts=us.aws.cdn.hf.co. No sentiment scores or topics were fabricated. Check Hugging Face network access/cache.",
-  "incomplete_deliverables": [
-    "comment_level_results.csv",
-    "sentiment_distribution.csv",
-    "sentiment_distribution.png",
-    "sentiment_score_distribution.png",
-    "topic_summary.csv",
-    "topic_bar_chart.png",
-    "topic_sentiment_crosstab.csv",
-    "topic_sentiment_heatmap.png",
-    "report.md"
-  ]
+  "topic_count_excluding_outliers": 10,
+  "outlier_count": 128,
+  "manual_review": {
+    "status": "pending_human_labels",
+    "sample_size": 100,
+    "automatic_smoke_examples": 5,
+    "assistant_review": "Qualitative reading of all 100 masked review examples; no human labels, no accuracy validation."
+  },
+  "runtime_seconds": 76.05004686599989,
+  "report_refreshed_at_utc": "2026-10-27T11:45:35.702200+00:00"
 }
